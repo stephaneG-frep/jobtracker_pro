@@ -8,6 +8,7 @@ import 'screens/reminders_screen.dart';
 import 'screens/stats_screen.dart';
 import 'screens/application_form_screen.dart';
 import 'screens/help_screen.dart';
+import 'services/local_database_service.dart';
 
 enum AppThemeOption {
   light('Clair', Icons.light_mode),
@@ -31,6 +32,29 @@ class _JobTrackerAppState extends State<JobTrackerApp> {
   AppThemeOption _themeOption = AppThemeOption.light;
 
   @override
+  void initState() {
+    super.initState();
+    _loadSavedTheme();
+  }
+
+  void _loadSavedTheme() {
+    final savedTheme = LocalDatabaseService.getTheme();
+    if (savedTheme == null) return;
+
+    for (final themeOption in AppThemeOption.values) {
+      if (themeOption.name == savedTheme) {
+        _themeOption = themeOption;
+        break;
+      }
+    }
+  }
+
+  Future<void> _setTheme(AppThemeOption themeOption) async {
+    setState(() => _themeOption = themeOption);
+    await LocalDatabaseService.saveTheme(themeOption.name);
+  }
+
+  @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'JobTracker Pro',
@@ -43,9 +67,7 @@ class _JobTrackerAppState extends State<JobTrackerApp> {
       supportedLocales: const [Locale('en'), Locale('fr')],
       home: MainShell(
         themeOption: _themeOption,
-        onThemeChanged: (themeOption) {
-          setState(() => _themeOption = themeOption);
-        },
+        onThemeChanged: _setTheme,
       ),
     );
   }
@@ -202,18 +224,23 @@ class _MainShellState extends State<MainShell> {
         items: [
           BottomNavigationBarItem(
               icon: const Icon(Icons.dashboard),
+              activeIcon: const _ActiveNavIcon(icon: Icons.dashboard),
               label: AppLocalizations.of(context).t('dashboard')),
           BottomNavigationBarItem(
               icon: const Icon(Icons.view_kanban),
+              activeIcon: const _ActiveNavIcon(icon: Icons.view_kanban),
               label: AppLocalizations.of(context).t('kanban')),
           BottomNavigationBarItem(
               icon: const Icon(Icons.list),
+              activeIcon: const _ActiveNavIcon(icon: Icons.list),
               label: AppLocalizations.of(context).t('applications')),
           BottomNavigationBarItem(
               icon: const Icon(Icons.alarm),
+              activeIcon: const _ActiveNavIcon(icon: Icons.alarm),
               label: AppLocalizations.of(context).t('reminders')),
           BottomNavigationBarItem(
               icon: const Icon(Icons.bar_chart),
+              activeIcon: const _ActiveNavIcon(icon: Icons.bar_chart),
               label: AppLocalizations.of(context).t('stats')),
         ],
       ),
@@ -226,6 +253,27 @@ class _MainShellState extends State<MainShell> {
               child: const Icon(Icons.add),
             )
           : null,
+    );
+  }
+}
+
+class _ActiveNavIcon extends StatelessWidget {
+  const _ActiveNavIcon({required this.icon});
+
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Container(
+      width: 44,
+      height: 32,
+      decoration: BoxDecoration(
+        color: colorScheme.primaryContainer,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Icon(icon, color: colorScheme.onPrimaryContainer),
     );
   }
 }
