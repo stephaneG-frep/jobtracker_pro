@@ -20,8 +20,11 @@ class AppLocalizations {
       'followup': 'Follow-up',
       'save': 'Save',
       'total': 'Total',
+      'prepare': 'To prepare',
       'sent': 'Sent',
+      'interview': 'Interview',
       'interviews': 'Interviews',
+      'followUp': 'Follow-up',
       'followups': 'Follow-ups',
       'rejected': 'Rejected',
       'accepted': 'Accepted',
@@ -41,6 +44,9 @@ class AppLocalizations {
       'no_data': 'No data',
       'chart_placeholder': 'Chart placeholder',
       'instruction': 'User guide',
+      'export_sent': 'Export sent applications',
+      'sent_export_title': 'Sent applications',
+      'no_sent_to_export': 'No sent applications to export',
     },
     'fr': {
       'appTitle': 'JobTracker Pro',
@@ -53,8 +59,11 @@ class AppLocalizations {
       'followup': 'Relance',
       'save': 'Enregistrer',
       'total': 'Total',
+      'prepare': 'À préparer',
       'sent': 'Envoyées',
+      'interview': 'Entretien',
       'interviews': 'Entretiens',
+      'followUp': 'À relancer',
       'followups': 'Relances',
       'rejected': 'Refusées',
       'accepted': 'Acceptées',
@@ -74,14 +83,17 @@ class AppLocalizations {
       'no_data': 'Aucune donnée',
       'chart_placeholder': 'Zone graphique',
       'instruction': 'Mode d\'emploi',
+      'export_sent': 'Exporter les annonces postulées',
+      'sent_export_title': 'Annonces postulées',
+      'no_sent_to_export': 'Aucune annonce postulée à exporter',
     }
   };
 
   String t(String key) {
-    final map = _localizedValues[locale.languageCode] ?? _localizedValues['en']!;
+    final map =
+        _localizedValues[locale.languageCode] ?? _localizedValues['en']!;
     return map[key] ?? key;
   }
-
 }
 
 class AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
@@ -96,5 +108,6 @@ class AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
   }
 
   @override
-  bool shouldReload(covariant LocalizationsDelegate<AppLocalizations> old) => false;
+  bool shouldReload(covariant LocalizationsDelegate<AppLocalizations> old) =>
+      false;
 }

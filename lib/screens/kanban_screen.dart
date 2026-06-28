@@ -1,11 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../l10n/app_localizations.dart';
 import '../models/job_application.dart';
 import '../providers/job_application_provider.dart';
 import '../widgets/application_card.dart';
 
-class KanbanScreen extends StatelessWidget {
+class KanbanScreen extends StatefulWidget {
   const KanbanScreen({Key? key}) : super(key: key);
+
+  @override
+  State<KanbanScreen> createState() => _KanbanScreenState();
+}
+
+class _KanbanScreenState extends State<KanbanScreen> {
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,23 +36,29 @@ class KanbanScreen extends StatelessWidget {
         builder: (context, constraints) {
           final columnWidth = constraints.maxWidth.clamp(220.0, 260.0);
 
-          return SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: SizedBox(
-              height: constraints.maxHeight,
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: ApplicationStatus.values.map((status) {
-                  return _KanbanColumn(
-                    width: columnWidth,
-                    status: status,
-                    applications: groups[status]!,
-                    onStatusChanged: (app) async {
-                      app.status = status;
-                      await provider.update(app);
-                    },
-                  );
-                }).toList(),
+          return Scrollbar(
+            controller: _scrollController,
+            thumbVisibility: true,
+            child: SingleChildScrollView(
+              controller: _scrollController,
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              child: SizedBox(
+                height: constraints.maxHeight,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: ApplicationStatus.values.map((status) {
+                    return _KanbanColumn(
+                      width: columnWidth,
+                      status: status,
+                      applications: groups[status]!,
+                      onStatusChanged: (app) async {
+                        app.status = status;
+                        await provider.update(app);
+                      },
+                    );
+                  }).toList(),
+                ),
               ),
             ),
           );
@@ -82,7 +102,7 @@ class _KanbanColumn extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
             color: colorScheme.surfaceContainerHighest,
             child: Text(
-              status.name,
+              AppLocalizations.of(context).t(status.name),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(fontWeight: FontWeight.bold),
@@ -112,7 +132,7 @@ class _KanbanColumn extends StatelessWidget {
                     final card =
                         ApplicationCard(application: item, compact: true);
 
-                    return Draggable<JobApplication>(
+                    return LongPressDraggable<JobApplication>(
                       data: item,
                       feedback: Material(
                         color: Colors.transparent,

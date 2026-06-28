@@ -49,28 +49,62 @@ class _ApplicationFormScreenState extends State<ApplicationFormScreen> {
   Widget build(BuildContext context) {
     final provider = Provider.of<JobApplicationProvider>(context);
     return Scaffold(
-      appBar: AppBar(title: Text(widget.edit == null ? AppLocalizations.of(context).t('add_new') : AppLocalizations.of(context).t('edit'))),
+      appBar: AppBar(
+          title: Text(widget.edit == null
+              ? AppLocalizations.of(context).t('add_new')
+              : AppLocalizations.of(context).t('edit'))),
       body: Padding(
         padding: const EdgeInsets.all(12.0),
         child: Form(
           key: _formKey,
           child: ListView(
             children: [
-              TextFormField(controller: _companyCtrl, decoration: InputDecoration(labelText: AppLocalizations.of(context).t('company')), validator: (v) => v == null || v.isEmpty ? AppLocalizations.of(context).t('required') : null),
-              TextFormField(controller: _titleCtrl, decoration: InputDecoration(labelText: AppLocalizations.of(context).t('job_title')), validator: (v) => v == null || v.isEmpty ? AppLocalizations.of(context).t('required') : null),
-              TextFormField(controller: _cityCtrl, decoration: InputDecoration(labelText: AppLocalizations.of(context).t('city'))),
-              TextFormField(controller: _emailCtrl, decoration: InputDecoration(labelText: AppLocalizations.of(context).t('recruiter_email'))),
+              TextFormField(
+                  controller: _companyCtrl,
+                  decoration: InputDecoration(
+                      labelText: AppLocalizations.of(context).t('company')),
+                  validator: (v) => v == null || v.isEmpty
+                      ? AppLocalizations.of(context).t('required')
+                      : null),
+              TextFormField(
+                  controller: _titleCtrl,
+                  decoration: InputDecoration(
+                      labelText: AppLocalizations.of(context).t('job_title')),
+                  validator: (v) => v == null || v.isEmpty
+                      ? AppLocalizations.of(context).t('required')
+                      : null),
+              TextFormField(
+                  controller: _cityCtrl,
+                  decoration: InputDecoration(
+                      labelText: AppLocalizations.of(context).t('city'))),
+              TextFormField(
+                  controller: _emailCtrl,
+                  decoration: InputDecoration(
+                      labelText:
+                          AppLocalizations.of(context).t('recruiter_email'))),
               DropdownButtonFormField<ApplicationStatus>(
                 initialValue: _status,
-                items: ApplicationStatus.values.map((s) => DropdownMenuItem(value: s, child: Text(AppLocalizations.of(context).t(s.name)))).toList(),
+                items: ApplicationStatus.values
+                    .map((s) => DropdownMenuItem(
+                        value: s,
+                        child: Text(AppLocalizations.of(context).t(s.name))))
+                    .toList(),
                 onChanged: (v) => setState(() => _status = v!),
               ),
               ListTile(
-                title: Text(_followUp == null ? AppLocalizations.of(context).t('followup_date') : '${AppLocalizations.of(context).t('followup')}: ${_followUp!.toLocal()}'),
-                trailing: IconButton(icon: const Icon(Icons.calendar_today), onPressed: () async {
-                  final d = await showDatePicker(context: context, initialDate: _followUp ?? DateTime.now(), firstDate: DateTime(2000), lastDate: DateTime(2100));
-                  if (d != null) setState(() => _followUp = d);
-                }),
+                title: Text(_followUp == null
+                    ? AppLocalizations.of(context).t('followup_date')
+                    : '${AppLocalizations.of(context).t('followup')}: ${_followUp!.toLocal()}'),
+                trailing: IconButton(
+                    icon: const Icon(Icons.calendar_today),
+                    onPressed: () async {
+                      final d = await showDatePicker(
+                          context: context,
+                          initialDate: _followUp ?? DateTime.now(),
+                          firstDate: DateTime(2000),
+                          lastDate: DateTime(2100));
+                      if (d != null) setState(() => _followUp = d);
+                    }),
               ),
               const SizedBox(height: 12),
               ElevatedButton(
@@ -82,7 +116,9 @@ class _ApplicationFormScreenState extends State<ApplicationFormScreen> {
                     company: _companyCtrl.text,
                     title: _titleCtrl.text,
                     city: _cityCtrl.text,
-                    contactEmail: _emailCtrl.text.isEmpty ? null : _emailCtrl.text,
+                    appliedAt: widget.edit?.appliedAt,
+                    contactEmail:
+                        _emailCtrl.text.isEmpty ? null : _emailCtrl.text,
                     status: _status,
                     followUpAt: _followUp,
                   );

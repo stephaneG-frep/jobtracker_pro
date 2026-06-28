@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../l10n/app_localizations.dart';
 import '../models/job_application.dart';
 
 class StatusChip extends StatelessWidget {
@@ -7,6 +8,7 @@ class StatusChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final label = AppLocalizations.of(context).t(status.name);
     Color c;
     switch (status) {
       case ApplicationStatus.accepted:
@@ -22,6 +24,13 @@ class StatusChip extends StatelessWidget {
         c = Colors.blueGrey;
     }
 
-    return Chip(label: Text(status.name), backgroundColor: c.withAlpha((255 * 0.15).round()), avatar: CircleAvatar(backgroundColor: c, child: Text(status.name[0].toUpperCase())));
+    return Chip(
+      label: Text(label),
+      backgroundColor: c.withAlpha((255 * 0.15).round()),
+      avatar: CircleAvatar(
+        backgroundColor: c,
+        child: Text(label[0].toUpperCase()),
+      ),
+    );
   }
 }
