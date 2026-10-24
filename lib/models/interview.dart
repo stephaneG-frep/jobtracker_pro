@@ -22,7 +22,7 @@ class Interview {
 
   factory Interview.fromMap(Map<String, dynamic> map) {
     return Interview(
-      dateTime: map['dateTime'] != null ? DateTime.parse(map['dateTime']) : DateTime.now(),
+      dateTime: (map['dateTime'] is String ? DateTime.tryParse(map['dateTime']) : null) ?? DateTime.now(),
       place: map['place'] ?? '',
       withPerson: map['withPerson'] ?? '',
       notes: map['notes'] ?? '',

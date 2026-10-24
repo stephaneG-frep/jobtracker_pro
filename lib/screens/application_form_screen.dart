@@ -7,7 +7,7 @@ import '../providers/job_application_provider.dart';
 
 class ApplicationFormScreen extends StatefulWidget {
   final JobApplication? edit;
-  const ApplicationFormScreen({Key? key, this.edit}) : super(key: key);
+  const ApplicationFormScreen({super.key, this.edit});
 
   @override
   State<ApplicationFormScreen> createState() => _ApplicationFormScreenState();
@@ -47,7 +47,7 @@ class _ApplicationFormScreenState extends State<ApplicationFormScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final provider = Provider.of<JobApplicationProvider>(context);
+    final provider = context.read<JobApplicationProvider>();
     return Scaffold(
       appBar: AppBar(
           title: Text(widget.edit == null
@@ -110,13 +110,15 @@ class _ApplicationFormScreenState extends State<ApplicationFormScreen> {
               ElevatedButton(
                 onPressed: () async {
                   if (!_formKey.currentState!.validate()) return;
-                  final id = widget.edit?.id ?? const Uuid().v4();
-                  final app = JobApplication(
-                    id: id,
+                  // Start from the edited application so fields this form
+                  // does not show (notes, salary, interviews...) are kept.
+                  final base = widget.edit ??
+                      JobApplication(
+                          id: const Uuid().v4(), company: '', title: '');
+                  final app = base.copyWith(
                     company: _companyCtrl.text,
                     title: _titleCtrl.text,
                     city: _cityCtrl.text,
-                    appliedAt: widget.edit?.appliedAt,
                     contactEmail:
                         _emailCtrl.text.isEmpty ? null : _emailCtrl.text,
                     status: _status,

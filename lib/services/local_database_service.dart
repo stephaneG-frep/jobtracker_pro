@@ -10,6 +10,7 @@ class LocalDatabaseService {
   static const String boxName = 'applications';
   static const String settingsBoxName = 'settings';
   static const String themeKey = 'theme';
+  static const String seededKey = 'demoSeeded';
 
   static Box<dynamic>? _box;
   static Box<dynamic>? _settingsBox;
@@ -27,7 +28,9 @@ class LocalDatabaseService {
   }
 
   static Future<void> _seedDemoDataIfNeeded() async {
-    if (_box == null) return;
+    if (_box == null || _settingsBox == null) return;
+    // Seed only once: an empty box later means the user deleted everything.
+    if (_settingsBox!.get(seededKey) == true) return;
     if (_box!.isEmpty) {
       final demo = [
         JobApplication(
@@ -57,13 +60,21 @@ class LocalDatabaseService {
         await _box!.put(demo[i]['id'], demo[i]);
       }
     }
+    await _settingsBox!.put(seededKey, true);
   }
 
   static List<JobApplication> getAll() {
     if (_box == null) return [];
-    return _box!.values
-        .map((e) => JobApplication.fromMap(Map<String, dynamic>.from(e)))
-        .toList();
+    final apps = <JobApplication>[];
+    for (final e in _box!.values) {
+      try {
+        apps.add(JobApplication.fromMap(Map<String, dynamic>.from(e)));
+      } catch (error) {
+        // A single unreadable entry must not prevent the app from starting.
+        debugPrint('Skipping unreadable application: $error');
+      }
+    }
+    return apps;
   }
 
   static Future<void> add(JobApplication app) async {

@@ -1,9 +1,13 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import '../l10n/app_localizations.dart';
 
 class ApplicationsPieChart extends StatelessWidget {
   final Map<String, int> data;
-  const ApplicationsPieChart({Key? key, required this.data}) : super(key: key);
+
+  /// One color per entry of [data], in the same order.
+  final List<Color> colors;
+  const ApplicationsPieChart({super.key, required this.data, required this.colors});
 
   @override
   Widget build(BuildContext context) {
@@ -11,19 +15,10 @@ class ApplicationsPieChart extends StatelessWidget {
     if (total == 0) {
       return Container(
         height: 160,
-        color: Colors.grey.shade200,
-        child: const Center(child: Text('Aucune donnée')),
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        child: Center(child: Text(AppLocalizations.of(context).t('no_data'))),
       );
     }
-
-    final colors = [
-      Theme.of(context).colorScheme.primary,
-      Colors.orange,
-      Colors.green,
-      Colors.purple,
-      Colors.red,
-      Colors.teal,
-    ];
 
     final entries = data.entries.toList();
 
@@ -35,7 +30,11 @@ class ApplicationsPieChart extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.all(8.0),
             child: CustomPaint(
-              painter: _PieChartPainter(entries.map((e) => e.value.toDouble()).toList(), colors),
+              painter: _PieChartPainter(
+                entries.map((e) => e.value.toDouble()).toList(),
+                colors,
+                Theme.of(context).scaffoldBackgroundColor,
+              ),
               child: const SizedBox.expand(),
             ),
           ),
@@ -69,7 +68,8 @@ class ApplicationsPieChart extends StatelessWidget {
 class _PieChartPainter extends CustomPainter {
   final List<double> values;
   final List<Color> colors;
-  _PieChartPainter(this.values, this.colors);
+  final Color holeColor;
+  _PieChartPainter(this.values, this.colors, this.holeColor);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -88,13 +88,15 @@ class _PieChartPainter extends CustomPainter {
     }
 
     // draw center circle
-    final centerPaint = Paint()..color = Colors.white;
+    final centerPaint = Paint()..color = holeColor;
     canvas.drawCircle(center, radius * 0.36, centerPaint);
   }
 
   @override
   bool shouldRepaint(covariant _PieChartPainter oldDelegate) {
-    return oldDelegate.values != values || oldDelegate.colors != colors;
+    return oldDelegate.values != values ||
+        oldDelegate.colors != colors ||
+        oldDelegate.holeColor != holeColor;
   }
 }
 

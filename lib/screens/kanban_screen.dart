@@ -3,10 +3,11 @@ import 'package:provider/provider.dart';
 import '../l10n/app_localizations.dart';
 import '../models/job_application.dart';
 import '../providers/job_application_provider.dart';
+import '../theme/status_colors.dart';
 import '../widgets/application_card.dart';
 
 class KanbanScreen extends StatefulWidget {
-  const KanbanScreen({Key? key}) : super(key: key);
+  const KanbanScreen({super.key});
 
   @override
   State<KanbanScreen> createState() => _KanbanScreenState();
@@ -53,8 +54,8 @@ class _KanbanScreenState extends State<KanbanScreen> {
                       status: status,
                       applications: groups[status]!,
                       onStatusChanged: (app) async {
-                        app.status = status;
-                        await provider.update(app);
+                        if (app.status == status) return;
+                        await provider.update(app.copyWith(status: status));
                       },
                     );
                   }).toList(),
@@ -84,6 +85,7 @@ class _KanbanColumn extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final accent = statusColor(context, status);
 
     return Container(
       width: width,
@@ -100,7 +102,11 @@ class _KanbanColumn extends StatelessWidget {
           Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-            color: colorScheme.surfaceContainerHighest,
+            decoration: BoxDecoration(
+              color: Color.alphaBlend(
+                  accent.withAlpha(90), colorScheme.surfaceContainerHighest),
+              border: Border(bottom: BorderSide(color: accent, width: 3)),
+            ),
             child: Text(
               AppLocalizations.of(context).t(status.name),
               maxLines: 1,
@@ -113,11 +119,11 @@ class _KanbanColumn extends StatelessWidget {
               onAcceptWithDetails: (details) => onStatusChanged(details.data),
               builder: (context, candidateData, rejected) {
                 if (applications.isEmpty) {
-                  return const Center(
+                  return Center(
                     child: Padding(
-                      padding: EdgeInsets.all(16.0),
+                      padding: const EdgeInsets.all(16.0),
                       child: Text(
-                        'Aucune candidature',
+                        AppLocalizations.of(context).t('no_applications'),
                         textAlign: TextAlign.center,
                       ),
                     ),

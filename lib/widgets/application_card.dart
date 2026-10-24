@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import '../l10n/app_localizations.dart';
 import '../models/job_application.dart';
+import '../theme/status_colors.dart';
+import 'accent_card.dart';
 import 'status_chip.dart';
 
 class ApplicationCard extends StatelessWidget {
@@ -10,16 +13,17 @@ class ApplicationCard extends StatelessWidget {
   final bool compact;
 
   const ApplicationCard({
-    Key? key,
+    super.key,
     required this.application,
     this.onTap,
     this.onEdit,
     this.onDelete,
     this.compact = false,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final title = Text(
       '${application.company} - ${application.title}',
       maxLines: compact ? 2 : null,
@@ -42,14 +46,14 @@ class ApplicationCard extends StatelessWidget {
           icon: const Icon(Icons.edit, size: 20),
           splashRadius: 20,
           onPressed: onEdit,
-          tooltip: 'Modifier',
+          tooltip: l10n.t('edit'),
         ),
       if (onDelete != null)
         IconButton(
           icon: const Icon(Icons.delete, size: 20),
           splashRadius: 20,
           onPressed: () => onDelete?.call(),
-          tooltip: 'Supprimer',
+          tooltip: l10n.t('delete'),
         ),
     ]);
 
@@ -96,10 +100,11 @@ class ApplicationCard extends StatelessWidget {
       ]),
     );
 
-    return Card(
+    return AccentCard(
+      color: statusColor(context, application.status),
       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-      child:
-          onTap == null ? cardChild : InkWell(onTap: onTap, child: cardChild),
+      onTap: onTap,
+      child: cardChild,
     );
   }
 }

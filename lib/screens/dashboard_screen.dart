@@ -6,47 +6,60 @@ import '../screens/applications_screen.dart';
 import '../widgets/dashboard_stat_card.dart';
 import '../widgets/pie_chart_widget.dart';
 import '../l10n/app_localizations.dart';
+import '../theme/status_colors.dart';
+
+// Statuses shown as stat cards and in the chart, with their label keys.
+const _chartStatuses = [
+  ApplicationStatus.sent,
+  ApplicationStatus.interview,
+  ApplicationStatus.followUp,
+  ApplicationStatus.rejected,
+  ApplicationStatus.accepted,
+];
+const _labelKeys = {
+  ApplicationStatus.sent: 'sent',
+  ApplicationStatus.interview: 'interviews',
+  ApplicationStatus.followUp: 'followups',
+  ApplicationStatus.rejected: 'rejected',
+  ApplicationStatus.accepted: 'accepted',
+};
 
 class DashboardScreen extends StatelessWidget {
-  const DashboardScreen({Key? key}) : super(key: key);
+  const DashboardScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<JobApplicationProvider>(context);
     final apps = provider.applications;
-    final total = apps.length;
-    final sent = apps.where((a) => a.status.name == 'sent').length;
-    final interviews = apps.where((a) => a.status.name == 'interview').length;
-    final followups = apps.where((a) => a.status.name == 'followUp').length;
-    final rejected = apps.where((a) => a.status.name == 'rejected').length;
-    final accepted = apps.where((a) => a.status.name == 'accepted').length;
+    final l10n = AppLocalizations.of(context);
+    int count(ApplicationStatus s) => apps.where((a) => a.status == s).length;
 
     return SafeArea(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(12.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(AppLocalizations.of(context).t('dashboard'), style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 12),
             Wrap(spacing: 12, runSpacing: 12, children: [
-              DashboardStatCard(label: AppLocalizations.of(context).t('total'), value: total.toString(), onTap: () => _openApplications(context, null)),
-              DashboardStatCard(label: AppLocalizations.of(context).t('sent'), value: sent.toString(), onTap: () => _openApplications(context, ApplicationStatus.sent)),
-              DashboardStatCard(label: AppLocalizations.of(context).t('interviews'), value: interviews.toString(), onTap: () => _openApplications(context, ApplicationStatus.interview)),
-              DashboardStatCard(label: AppLocalizations.of(context).t('followups'), value: followups.toString(), onTap: () => _openApplications(context, ApplicationStatus.followUp)),
-              DashboardStatCard(label: AppLocalizations.of(context).t('rejected'), value: rejected.toString(), onTap: () => _openApplications(context, ApplicationStatus.rejected)),
-              DashboardStatCard(label: AppLocalizations.of(context).t('accepted'), value: accepted.toString(), onTap: () => _openApplications(context, ApplicationStatus.accepted)),
+              DashboardStatCard(
+                  label: l10n.t('total'),
+                  value: apps.length.toString(),
+                  color: Theme.of(context).colorScheme.primary,
+                  onTap: () => _openApplications(context, null)),
+              for (final s in _chartStatuses)
+                DashboardStatCard(
+                    label: l10n.t(_labelKeys[s]!),
+                    value: count(s).toString(),
+                    color: statusColor(context, s),
+                    onTap: () => _openApplications(context, s)),
             ]),
             const SizedBox(height: 20),
-            Text(AppLocalizations.of(context).t('chart')),
+            Text(l10n.t('chart')),
             const SizedBox(height: 8),
-            ApplicationsPieChart(data: {
-              AppLocalizations.of(context).t('sent'): sent,
-              AppLocalizations.of(context).t('interviews'): interviews,
-              AppLocalizations.of(context).t('followups'): followups,
-              AppLocalizations.of(context).t('rejected'): rejected,
-              AppLocalizations.of(context).t('accepted'): accepted,
-            }),
+            ApplicationsPieChart(
+              data: {for (final s in _chartStatuses) l10n.t(_labelKeys[s]!): count(s)},
+              colors: [for (final s in _chartStatuses) statusColor(context, s)],
+            ),
           ],
         ),
       ),

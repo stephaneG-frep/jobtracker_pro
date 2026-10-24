@@ -8,21 +8,23 @@ import 'screens/reminders_screen.dart';
 import 'screens/stats_screen.dart';
 import 'screens/application_form_screen.dart';
 import 'screens/help_screen.dart';
+import 'package:provider/provider.dart';
+import 'providers/job_application_provider.dart';
 import 'services/local_database_service.dart';
 
 enum AppThemeOption {
-  light('Clair', Icons.light_mode),
-  balanced('50/50', Icons.contrast),
-  dark('Foncé', Icons.dark_mode);
+  light('theme_light', Icons.light_mode),
+  balanced('theme_balanced', Icons.contrast),
+  dark('theme_dark', Icons.dark_mode);
 
-  const AppThemeOption(this.label, this.icon);
+  const AppThemeOption(this.labelKey, this.icon);
 
-  final String label;
+  final String labelKey;
   final IconData icon;
 }
 
 class JobTrackerApp extends StatefulWidget {
-  const JobTrackerApp({Key? key}) : super(key: key);
+  const JobTrackerApp({super.key});
 
   @override
   State<JobTrackerApp> createState() => _JobTrackerAppState();
@@ -144,10 +146,10 @@ ThemeData _themeData(AppThemeOption option) {
 
 class MainShell extends StatefulWidget {
   const MainShell({
-    Key? key,
+    super.key,
     required this.themeOption,
     required this.onThemeChanged,
-  }) : super(key: key);
+  });
 
   final AppThemeOption themeOption;
   final ValueChanged<AppThemeOption> onThemeChanged;
@@ -162,24 +164,32 @@ class _MainShellState extends State<MainShell> {
   static const List<Widget> _pages = <Widget>[
     DashboardScreen(),
     KanbanScreen(),
-    ApplicationsScreen(),
+    ApplicationsScreen(embedded: true),
     RemindersScreen(),
     StatsScreen(),
   ];
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppLocalizations.of(context).t(_navTitleKey(_index))),
+        title: Text(l10n.t(_navTitleKey(_index))),
         actions: [
+          if (_index == 2)
+            IconButton(
+              icon: const Icon(Icons.file_download_outlined),
+              tooltip: l10n.t('export_sent'),
+              onPressed: () => exportSentApplications(context,
+                  context.read<JobApplicationProvider>().applications),
+            ),
           IconButton(
             icon: const Icon(Icons.add),
             onPressed: () {
               Navigator.of(context).push(MaterialPageRoute(
                   builder: (_) => const ApplicationFormScreen()));
             },
-            tooltip: AppLocalizations.of(context).t('add_new'),
+            tooltip: l10n.t('add_new'),
           ),
           IconButton(
             icon: const Icon(Icons.help_outline),
@@ -187,11 +197,11 @@ class _MainShellState extends State<MainShell> {
               Navigator.of(context)
                   .push(MaterialPageRoute(builder: (_) => const HelpScreen()));
             },
-            tooltip: AppLocalizations.of(context).t('help'),
+            tooltip: l10n.t('help'),
           ),
           PopupMenuButton<AppThemeOption>(
             icon: Icon(widget.themeOption.icon),
-            tooltip: 'Thème',
+            tooltip: l10n.t('theme'),
             onSelected: widget.onThemeChanged,
             itemBuilder: (context) {
               return AppThemeOption.values.map((themeOption) {
@@ -201,7 +211,7 @@ class _MainShellState extends State<MainShell> {
                     children: [
                       Icon(themeOption.icon),
                       const SizedBox(width: 12),
-                      Text(themeOption.label),
+                      Text(l10n.t(themeOption.labelKey)),
                       if (themeOption == widget.themeOption) ...[
                         const Spacer(),
                         const Icon(Icons.check),
@@ -225,34 +235,25 @@ class _MainShellState extends State<MainShell> {
           BottomNavigationBarItem(
               icon: const Icon(Icons.dashboard),
               activeIcon: const _ActiveNavIcon(icon: Icons.dashboard),
-              label: AppLocalizations.of(context).t('dashboard')),
+              label: l10n.t('dashboard')),
           BottomNavigationBarItem(
               icon: const Icon(Icons.view_kanban),
               activeIcon: const _ActiveNavIcon(icon: Icons.view_kanban),
-              label: AppLocalizations.of(context).t('kanban')),
+              label: l10n.t('kanban')),
           BottomNavigationBarItem(
               icon: const Icon(Icons.list),
               activeIcon: const _ActiveNavIcon(icon: Icons.list),
-              label: AppLocalizations.of(context).t('applications')),
+              label: l10n.t('applications')),
           BottomNavigationBarItem(
               icon: const Icon(Icons.alarm),
               activeIcon: const _ActiveNavIcon(icon: Icons.alarm),
-              label: AppLocalizations.of(context).t('reminders')),
+              label: l10n.t('reminders')),
           BottomNavigationBarItem(
               icon: const Icon(Icons.bar_chart),
               activeIcon: const _ActiveNavIcon(icon: Icons.bar_chart),
-              label: AppLocalizations.of(context).t('stats')),
+              label: l10n.t('stats')),
         ],
       ),
-      floatingActionButton: _index == 2
-          ? FloatingActionButton(
-              onPressed: () async {
-                Navigator.of(context).push(MaterialPageRoute(
-                    builder: (_) => const ApplicationFormScreen()));
-              },
-              child: const Icon(Icons.add),
-            )
-          : null,
     );
   }
 }
