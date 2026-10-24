@@ -29,8 +29,6 @@ class StatsScreen extends StatelessWidget {
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(12.0),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(l10n.t('statistics'), style: Theme.of(context).textTheme.headlineSmall),
-          const SizedBox(height: 16),
           Wrap(spacing: 12, runSpacing: 12, children: [
             DashboardStatCard(
                 label: l10n.t('response_rate'),
