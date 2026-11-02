@@ -179,8 +179,8 @@ class _MainShellState extends State<MainShell> {
           if (_index == 2)
             IconButton(
               icon: const Icon(Icons.file_download_outlined),
-              tooltip: l10n.t('export_sent'),
-              onPressed: () => exportSentApplications(context,
+              tooltip: l10n.t('export_applications'),
+              onPressed: () => exportApplications(context,
                   context.read<JobApplicationProvider>().applications),
             ),
           IconButton(

@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:printing/printing.dart';
 import 'package:provider/provider.dart';
@@ -129,9 +131,9 @@ class _ApplicationsScreenState extends State<ApplicationsScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.file_download_outlined),
-            tooltip: l10n.t('export_sent'),
+            tooltip: l10n.t('export_applications'),
             onPressed: () =>
-                exportSentApplications(context, provider.applications),
+                exportApplications(context, provider.applications),
           ),
         ],
       ),
@@ -179,25 +181,25 @@ bool matchesSearch(JobApplication app, String query) {
   return words.every(haystack.contains);
 }
 
-Future<void> exportSentApplications(
+Future<void> exportApplications(
   BuildContext context,
   List<JobApplication> applications,
 ) async {
   final l10n = AppLocalizations.of(context);
-  final sentApplications = List<JobApplication>.from(
-    applications.where((app) => app.status == ApplicationStatus.sent),
+  final allApplications = List<JobApplication>.from(
+    applications,
   )..sort((a, b) => b.appliedAt.compareTo(a.appliedAt));
 
-  if (sentApplications.isEmpty) {
+  if (allApplications.isEmpty) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(l10n.t('no_sent_to_export'))),
+      SnackBar(content: Text(l10n.t('no_applications_to_export'))),
     );
     return;
   }
 
-  // Default to the whole history: from the oldest sent application to today.
+  // Default to the whole history: from the oldest application to today.
   DateTime dateOnly(DateTime d) => DateTime(d.year, d.month, d.day);
-  final oldest = dateOnly(sentApplications.last.appliedAt);
+  final oldest = dateOnly(allApplications.last.appliedAt.toLocal());
   final today = dateOnly(DateTime.now());
   final firstDate = oldest.isBefore(DateTime(2000)) ? oldest : DateTime(2000);
   final range = await showDateRangePicker(
@@ -214,8 +216,8 @@ Future<void> exportSentApplications(
   if (range == null || !context.mounted) return;
 
   // The end day is inclusive.
-  final endExclusive = range.end.add(const Duration(days: 1));
-  final inRange = sentApplications
+  final endExclusive = DateTime(range.end.year, range.end.month, range.end.day + 1);
+  final inRange = allApplications
       .where((a) =>
           !a.appliedAt.isBefore(range.start) &&
           a.appliedAt.isBefore(endExclusive))
@@ -223,7 +225,7 @@ Future<void> exportSentApplications(
 
   if (inRange.isEmpty) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(l10n.t('no_sent_in_period'))),
+      SnackBar(content: Text(l10n.t('no_applications_in_period'))),
     );
     return;
   }
@@ -232,7 +234,7 @@ Future<void> exportSentApplications(
     inRange,
     from: range.start,
     to: range.end,
-    title: l10n.t('sent_export_title'),
+    title: l10n.t('applications_export_title'),
     statusLabelBuilder: (status) => l10n.t(status.name),
     columnHeaders: [
       l10n.t('company'),
@@ -244,11 +246,52 @@ Future<void> exportSentApplications(
   );
 
   String fileDate(DateTime d) => formatShortDate(d).split('/').reversed.join('-');
-  await Printing.sharePdf(
-    bytes: pdfBytes,
-    filename:
-        'jobtracker_annonces_postulees_${fileDate(range.start)}_${fileDate(range.end)}.pdf',
-  );
+  final filename =
+      'jobtracker_candidatures_${fileDate(range.start)}_${fileDate(range.end)}.pdf';
+  if (!context.mounted) return;
+  final saveOnDevice = !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
+  final action = saveOnDevice
+      ? await showModalBottomSheet<String>(
+          context: context,
+          builder: (sheetContext) => SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.save_alt),
+                  title: Text(l10n.t('save_pdf')),
+                  onTap: () => Navigator.pop(sheetContext, 'save'),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.share),
+                  title: Text(l10n.t('share_pdf')),
+                  onTap: () => Navigator.pop(sheetContext, 'share'),
+                ),
+              ],
+            ),
+          ),
+        )
+      : 'share';
+  if (action == null) return;
+  try {
+    if (action == 'save') {
+      final saved = await const MethodChannel('jobtracker/pdf')
+          .invokeMethod<bool>('savePdf', {'bytes': pdfBytes, 'filename': filename});
+      if (saved == true && context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.t('pdf_saved'))),
+        );
+      }
+    } else {
+      await Printing.sharePdf(bytes: pdfBytes, filename: filename);
+    }
+  } catch (error) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.t('pdf_save_error'))),
+      );
+    }
+  }
 }
 
 class _WeekHeader extends StatelessWidget {

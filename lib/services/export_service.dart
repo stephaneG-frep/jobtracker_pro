@@ -18,7 +18,7 @@ class ExportService {
       "contract",
       "email",
       "phone",
-      "salary"
+      "salary",
     ]);
     for (var a in apps) {
       rows.add([
@@ -43,30 +43,50 @@ class ExportService {
     DateTime? to,
     String title = 'Rapport JobTracker Pro',
     String Function(ApplicationStatus status)? statusLabelBuilder,
-    List<String> columnHeaders = const ['Entreprise', 'Poste', 'Statut', 'Date'],
+    List<String> columnHeaders = const [
+      'Entreprise',
+      'Poste',
+      'Statut',
+      'Date',
+    ],
     String Function(String from, String to)? periodLabelBuilder,
   }) async {
     final fromLabel = from == null ? '-' : formatShortDate(from);
     final toLabel = to == null ? '-' : formatShortDate(to);
     final doc = pw.Document();
-    doc.addPage(pw.MultiPage(build: (context) {
-      return [
-        pw.Header(level: 0, child: pw.Text(_pdfText(title))),
-        if (from != null || to != null)
-          pw.Paragraph(
-              text: _pdfText(periodLabelBuilder?.call(fromLabel, toLabel) ??
-                  'Periode: $fromLabel -> $toLabel')),
-        pw.TableHelper.fromTextArray(data: [
-          columnHeaders.map(_pdfText).toList(),
-          ...apps.map((a) => [
-                _pdfText(a.company),
-                _pdfText(a.title),
-                _pdfText(statusLabelBuilder?.call(a.status) ?? a.status.name),
-                formatShortDate(a.appliedAt.toLocal()),
-              ])
-        ])
-      ];
-    }));
+    doc.addPage(
+      pw.MultiPage(
+        // Allow large histories while retaining a finite pagination guard.
+        maxPages: apps.length + 20,
+        build: (context) {
+          return [
+            pw.Header(level: 0, child: pw.Text(_pdfText(title))),
+            if (from != null || to != null)
+              pw.Paragraph(
+                text: _pdfText(
+                  periodLabelBuilder?.call(fromLabel, toLabel) ??
+                      'Periode: $fromLabel -> $toLabel',
+                ),
+              ),
+            pw.TableHelper.fromTextArray(
+              data: [
+                columnHeaders.map(_pdfText).toList(),
+                ...apps.map(
+                  (a) => [
+                    _pdfText(a.company),
+                    _pdfText(a.title),
+                    _pdfText(
+                      statusLabelBuilder?.call(a.status) ?? a.status.name,
+                    ),
+                    formatShortDate(a.appliedAt.toLocal()),
+                  ],
+                ),
+              ],
+            ),
+          ];
+        },
+      ),
+    );
     return doc.save();
   }
 
